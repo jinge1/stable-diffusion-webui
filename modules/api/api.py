@@ -5,6 +5,7 @@ import datetime
 import uvicorn
 import asyncio
 from asyncio import create_task
+from loguru import logger
 import gradio as gr
 from threading import Lock
 from io import BytesIO
@@ -134,22 +135,17 @@ async def api_middleware(app: FastAPI):
             "body": vars(e).get('body', ''),
             "errors": str(e),
         }
-        # 使用异步的 print() 函数
-        create_task(async_print(f"API error: {request.method}: {request.url} {err}"))
+        logger.error(f"API error: {request.method}: {request.url} {err}")
         if not isinstance(e, HTTPException):
-            if rich_available:
-                # 使用异步的 console.print_exception() 方法
-                create_task(console.print_exception(show_locals=True, max_frames=2, extra_lines=1, suppress=[anyio, starlette], word_wrap=False, width=min([console.width, 200])))
-            else:
-                traceback.print_exc()
+            logger.exception(e)
         return JSONResponse(status_code=vars(e).get('status_code', 500), content=jsonable_encoder(err))
 
-    @app.middleware("http")
-    async def exception_handling(request: Request, call_next):
-        try:
-            return await call_next(request)
-        except Exception as e:
-            return await handle_exception(request, e)
+        @app.middleware("http")
+        async def exception_handling(request: Request, call_next):
+            try:
+                return await call_next(request)
+            except Exception as e:
+                return await handle_exception(request, e)
 
     @app.exception_handler(Exception)
     async def fastapi_exception_handler(request: Request, e: Exception):
