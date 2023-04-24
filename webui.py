@@ -5,6 +5,7 @@ import importlib
 import signal
 import re
 import warnings
+import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -204,14 +205,14 @@ def create_api(app):
     return api
 
 
-def wait_on_server(demo=None):
-    while 1:
-        time.sleep(0.5)
+async def wait_on_server(demo=None):
+    while True:
+        await asyncio.sleep(0.5)
         if shared.state.need_restart:
             shared.state.need_restart = False
-            time.sleep(0.5)
+            await asyncio.sleep(0.5)
             demo.close()
-            time.sleep(0.5)
+            await asyncio.sleep(0.5)
             break
 
 
