@@ -1,9 +1,11 @@
+import anyio
 import base64
 import io
 import time
 import datetime
 import uvicorn
 import asyncio
+from rich.console import Console
 from asyncio import create_task
 from loguru import logger
 import gradio as gr
@@ -32,6 +34,8 @@ from modules import devices
 from typing import List
 import piexif
 import piexif.helper
+
+console=Console(force_terminal=True)
 
 def upscaler_to_index(name: str):
     try:
@@ -99,9 +103,7 @@ def encode_pil_to_base64(image):
 async def api_middleware(app: FastAPI):
     rich_available = True
     try:
-        import anyio # importing just so it can be placed on silent list
         import starlette # importing just so it can be placed on silent list
-        from rich.console import Console
         console = Console()
     except:
         import traceback
